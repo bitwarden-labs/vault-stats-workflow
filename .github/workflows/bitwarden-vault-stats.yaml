@@ -41,17 +41,25 @@ jobs:
           set -e
           BW_SESSION="${{ env.BW_SESSION }}"
 
-          # Count item types
-          LOGIN_COUNT=$(bw list items --session $BW_SESSION | jq '[.[] | select(.type == 1)] | length')
-          CARD_COUNT=$(bw list items --session $BW_SESSION | jq '[.[] | select(.type == 3)] | length')
-          IDENTITY_COUNT=$(bw list items --session $BW_SESSION | jq '[.[] | select(.type == 4)] | length')
-          NOTE_COUNT=$(bw list items --session $BW_SESSION | jq '[.[] | select(.type == 2)] | length')
+          # Function to count item types
+          count_items() {
+            local type=$1
+            bw list items --session $BW_SESSION | jq "[.[] | select(.type == $type)] | length"
+          }
 
-          # Store counts in GITHUB_ENV for later use
-          echo "LOGIN_COUNT=$LOGIN_COUNT" >> $GITHUB_ENV
-          echo "CARD_COUNT=$CARD_COUNT" >> $GITHUB_ENV
-          echo "IDENTITY_COUNT=$IDENTITY_COUNT" >> $GITHUB_ENV
-          echo "NOTE_COUNT=$NOTE_COUNT" >> $GITHUB_ENV
+          # Declare an associative array to store item types
+          declare -A item_types=(
+            [LOGIN_COUNT]=1
+            [CARD_COUNT]=3
+            [IDENTITY_COUNT]=4
+            [NOTE_COUNT]=2
+          )
+
+          # Count item types and store in GITHUB_ENV
+          for item in "${!item_types[@]}"; do
+            count=$(count_items "${item_types[$item]}")
+            echo "$item=$count" >> $GITHUB_ENV
+          done
 
           # Print the counts
           echo "======================"
@@ -63,7 +71,7 @@ jobs:
           echo "📝 Secure Notes: $NOTE_COUNT"
         shell: bash
 
-      - name: "📤 Cretae a Bitwarden Send with Item Counts"
+      - name: "📤 Create a Bitwarden Send with Item Counts"
         run: |
           set -e
           BW_SESSION="${{ env.BW_SESSION }}"
