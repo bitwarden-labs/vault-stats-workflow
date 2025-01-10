@@ -1,0 +1,83 @@
+name: "🔐 Generating Bitwarden Vault Stats ..."
+on: [workflow_dispatch]
+jobs:
+  build:
+    name: "📊 Vault Stats, Members, and Send"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "🔑 Get Bitwarden Secrets"
+        uses: bitwarden/sm-action@v2
+        with:
+          access_token: ${{ secrets.BW_ACCESS_TOKEN }}
+          base_url: https://vault.bitwarden.com
+          secrets: |
+            b987455d-9c82-45cf-9e78-b15c008f3a58 > EMAIL
+            9a09d304-790e-40ec-be5a-b15c008f30af > MASTER_PASSWORD        
+        id: bitwarden-secrets
+
+      - name: "⚙️ Install Bitwarden CLI (Standalone)"
+        run: |
+          set -e
+          curl -L "https://vault.bitwarden.com/download/?app=cli&platform=linux" -o bw.zip
+          unzip bw.zip
+          sudo mv bw /usr/local/bin/
+          bw --version # Verify installation
+
+      - name: "🔐 Log in to Bitwarden CLI (${{ steps.bitwarden-secrets.outputs.EMAIL }})"
+        run: |
+          set -e
+          echo "${{ steps.bitwarden-secrets.outputs.MASTER_PASSWORD }}" | bw login ${{ steps.bitwarden-secrets.outputs.EMAIL }} --passwordenv MASTER_PASSWORD --quiet
+        shell: bash
+
+      - name: "🔓 Unlock Vault"
+        run: |
+          set -e
+          BW_SESSION=$(bw unlock --passwordenv MASTER_PASSWORD --raw)
+          echo "BW_SESSION=$BW_SESSION" >> $GITHUB_ENV
+        shell: bash
+
+      - name: "📊 Count Specific Item Types"
+        run: |
+          set -e
+          BW_SESSION="${{ env.BW_SESSION }}"
+
+          # Count item types
+          LOGIN_COUNT=$(bw list items --session $BW_SESSION | jq '[.[] | select(.type == 1)] | length')
+          CARD_COUNT=$(bw list items --session $BW_SESSION | jq '[.[] | select(.type == 3)] | length')
+          IDENTITY_COUNT=$(bw list items --session $BW_SESSION | jq '[.[] | select(.type == 4)] | length')
+          NOTE_COUNT=$(bw list items --session $BW_SESSION | jq '[.[] | select(.type == 2)] | length')
+
+          # Store counts in GITHUB_ENV for later use
+          echo "LOGIN_COUNT=$LOGIN_COUNT" >> $GITHUB_ENV
+          echo "CARD_COUNT=$CARD_COUNT" >> $GITHUB_ENV
+          echo "IDENTITY_COUNT=$IDENTITY_COUNT" >> $GITHUB_ENV
+          echo "NOTE_COUNT=$NOTE_COUNT" >> $GITHUB_ENV
+
+          # Print the counts
+          echo "======================"
+          echo "🔐 Bitwarden Item Counts"
+          echo "======================"
+          echo "🔑 Logins: $LOGIN_COUNT"
+          echo "💳 Cards: $CARD_COUNT"
+          echo "🆔 Identities: $IDENTITY_COUNT"
+          echo "📝 Secure Notes: $NOTE_COUNT"
+        shell: bash
+
+      - name: "📤 Cretae a Bitwarden Send with Item Counts"
+        run: |
+          set -e
+          BW_SESSION="${{ env.BW_SESSION }}"
+          EMAIL="${{ steps.bitwarden-secrets.outputs.EMAIL }}"
+          
+          # Format the stats message
+          STATS="Your vault ($EMAIL) has access to: ${{ env.LOGIN_COUNT }} logins, ${{ env.CARD_COUNT }} cards, ${{ env.IDENTITY_COUNT }} identities, and ${{ env.NOTE_COUNT }} secure notes."
+
+          # Send the stats and capture the result
+          SEND_RESULT=$(bw send -n "Bitwarden Item Counts ($EMAIL)" -d 7 --hidden "$STATS" --session $BW_SESSION)
+          
+          # Parse the accessUrl from the result
+          ACCESS_URL=$(echo $SEND_RESULT | jq -r '.accessUrl')
+          
+          # Display the URL          
+          echo "🔗 Bitwarden Send URL for $EMAIL: $ACCESS_URL"
+        shell: bash
