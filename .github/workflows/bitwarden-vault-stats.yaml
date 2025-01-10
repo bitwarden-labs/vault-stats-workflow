@@ -38,7 +38,7 @@ jobs:
 
       - name: "📊 Count Specific Item Types"
         run: |
-          set -e
+         set -e
           BW_SESSION="${{ env.BW_SESSION }}"
 
           # Function to count item types
@@ -55,10 +55,11 @@ jobs:
             [NOTE_COUNT]=2
           )
 
-          # Count item types and store in GITHUB_ENV
+          # Count item types and export to GITHUB_ENV and shell
           for item in "${!item_types[@]}"; do
             count=$(count_items "${item_types[$item]}")
             echo "$item=$count" >> $GITHUB_ENV
+            export $item=$count
           done
 
           # Print the counts
