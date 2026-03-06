@@ -60,6 +60,7 @@ jobs:
             [CARD_COUNT]=3
             [IDENTITY_COUNT]=4
             [NOTE_COUNT]=2
+            [SSH_KEY_COUNT]=5
           )
 
           # Count item types and export to GITHUB_ENV and shell
@@ -77,6 +78,7 @@ jobs:
           echo "💳 Cards: $CARD_COUNT"
           echo "🆔 Identities: $IDENTITY_COUNT"
           echo "📝 Secure Notes: $NOTE_COUNT"
+          echo "🔐 SSH Keys: $SSH_KEY_COUNT"
         shell: bash
 
       - name: "📤 Create a Bitwarden Send with Item Counts"
@@ -86,7 +88,7 @@ jobs:
           EMAIL="${{ steps.bitwarden-secrets.outputs.EMAIL }}"
           
           # Format the stats message
-          STATS=$(printf "Bitwarden Vault Stats\n=====================\n\nAccount: %s\n\n🔑 Logins:       %s\n💳 Cards:        %s\n🆔 Identities:  %s\n📝 Secure Notes: %s" "$EMAIL" "${{ env.LOGIN_COUNT }}" "${{ env.CARD_COUNT }}" "${{ env.IDENTITY_COUNT }}" "${{ env.NOTE_COUNT }}")
+          STATS=$(printf "Bitwarden Vault Stats\n=====================\n\nAccount: %s\n\n🔑 Logins:       %s\n💳 Cards:        %s\n🆔 Identities:  %s\n📝 Secure Notes: %s\n🔐 SSH Keys:     %s" "$EMAIL" "${{ env.LOGIN_COUNT }}" "${{ env.CARD_COUNT }}" "${{ env.IDENTITY_COUNT }}" "${{ env.NOTE_COUNT }}" "${{ env.SSH_KEY_COUNT }}")
 
           # Send the stats and capture the result
           SEND_RESULT=$(bw send -n "Bitwarden Item Counts ($EMAIL)" -d 7 --hidden "$STATS" --session $BW_SESSION)
