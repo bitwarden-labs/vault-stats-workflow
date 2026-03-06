@@ -12,7 +12,9 @@ jobs:
           base_url: https://vault.bitwarden.com
           secrets: |
             b987455d-9c82-45cf-9e78-b15c008f3a58 > EMAIL
-            9a09d304-790e-40ec-be5a-b15c008f30af > MASTER_PASSWORD        
+            9a09d304-790e-40ec-be5a-b15c008f30af > MASTER_PASSWORD
+            29adc4e7-1a97-4e4f-9644-b40500a6a4b2 > BW_CLIENTID
+            81404c9c-3d9c-4ddd-a32e-b40500a6c212 > BW_CLIENTSECRET
         id: bitwarden-secrets
 
       - name: "⚙️ Install Bitwarden CLI (Standalone)"
@@ -26,10 +28,10 @@ jobs:
       - name: "🔐 Log in to Bitwarden CLI"
         run: |
           set -e
-          bw login "${EMAIL}" "${MASTER_PASSWORD}"
+          bw login --apikey
         env:
-          MASTER_PASSWORD: ${{ steps.bitwarden-secrets.outputs.MASTER_PASSWORD }}
-          EMAIL: ${{ steps.bitwarden-secrets.outputs.EMAIL }}
+          BW_CLIENTID: ${{ steps.bitwarden-secrets.outputs.BW_CLIENTID }}
+          BW_CLIENTSECRET: ${{ steps.bitwarden-secrets.outputs.BW_CLIENTSECRET }}
         shell: bash
 
       - name: "🔓 Unlock Vault"
