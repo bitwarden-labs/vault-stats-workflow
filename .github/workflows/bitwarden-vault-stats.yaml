@@ -26,8 +26,7 @@ jobs:
       - name: "🔐 Log in to Bitwarden CLI"
         run: |
           set -e
-          export BW_PASSWORD="${MASTER_PASSWORD}"
-          bw login "${EMAIL}" --passwordenv BW_PASSWORD --quiet
+          bw login "${EMAIL}" "${MASTER_PASSWORD}" --quiet
         env:
           MASTER_PASSWORD: ${{ steps.bitwarden-secrets.outputs.MASTER_PASSWORD }}
           EMAIL: ${{ steps.bitwarden-secrets.outputs.EMAIL }}
@@ -38,6 +37,8 @@ jobs:
           set -e
           BW_SESSION=$(bw unlock --passwordenv MASTER_PASSWORD --raw)
           echo "BW_SESSION=$BW_SESSION" >> $GITHUB_ENV
+        env:
+          MASTER_PASSWORD: ${{ steps.bitwarden-secrets.outputs.MASTER_PASSWORD }}
         shell: bash
 
       - name: "📊 Count Specific Item Types"
