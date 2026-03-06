@@ -86,7 +86,7 @@ jobs:
           EMAIL="${{ steps.bitwarden-secrets.outputs.EMAIL }}"
           
           # Format the stats message
-          STATS="Your vault ($EMAIL) has access to: ${{ env.LOGIN_COUNT }} logins, ${{ env.CARD_COUNT }} cards, ${{ env.IDENTITY_COUNT }} identities, and ${{ env.NOTE_COUNT }} secure notes."
+          STATS=$(printf "Bitwarden Vault Stats\n=====================\n\nAccount: %s\n\n🔑 Logins:       %s\n💳 Cards:        %s\n🆔 Identities:  %s\n📝 Secure Notes: %s" "$EMAIL" "${{ env.LOGIN_COUNT }}" "${{ env.CARD_COUNT }}" "${{ env.IDENTITY_COUNT }}" "${{ env.NOTE_COUNT }}")
 
           # Send the stats and capture the result
           SEND_RESULT=$(bw send -n "Bitwarden Item Counts ($EMAIL)" -d 7 --hidden "$STATS" --session $BW_SESSION)
