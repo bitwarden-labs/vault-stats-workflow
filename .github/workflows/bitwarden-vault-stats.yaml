@@ -23,10 +23,12 @@ jobs:
           sudo mv bw /usr/local/bin/
           bw --version # Verify installation
 
-      - name: "🔐 Log in to Bitwarden CLI (${{ steps.bitwarden-secrets.outputs.EMAIL }})"
+      - name: "🔐 Log in to Bitwarden CLI"
         run: |
           set -e
-          echo "${{ steps.bitwarden-secrets.outputs.MASTER_PASSWORD }}" | bw login ${{ steps.bitwarden-secrets.outputs.EMAIL }} --passwordenv MASTER_PASSWORD --quiet
+          bw login ${{ steps.bitwarden-secrets.outputs.EMAIL }} --passwordenv MASTER_PASSWORD --quiet
+        env:
+          MASTER_PASSWORD: ${{ steps.bitwarden-secrets.outputs.MASTER_PASSWORD }}
         shell: bash
 
       - name: "🔓 Unlock Vault"
