@@ -26,9 +26,11 @@ jobs:
       - name: "🔐 Log in to Bitwarden CLI"
         run: |
           set -e
-          bw login ${{ steps.bitwarden-secrets.outputs.EMAIL }} --passwordenv MASTER_PASSWORD --quiet
+          export BW_PASSWORD="${MASTER_PASSWORD}"
+          bw login "${EMAIL}" --passwordenv BW_PASSWORD --quiet
         env:
           MASTER_PASSWORD: ${{ steps.bitwarden-secrets.outputs.MASTER_PASSWORD }}
+          EMAIL: ${{ steps.bitwarden-secrets.outputs.EMAIL }}
         shell: bash
 
       - name: "🔓 Unlock Vault"
