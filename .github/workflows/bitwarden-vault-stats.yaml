@@ -11,7 +11,6 @@ jobs:
           access_token: ${{ secrets.BW_ACCESS_TOKEN }}
           base_url: https://vault.bitwarden.com
           secrets: |
-            b987455d-9c82-45cf-9e78-b15c008f3a58 > EMAIL
             9a09d304-790e-40ec-be5a-b15c008f30af > MASTER_PASSWORD
             29adc4e7-1a97-4e4f-9644-b40500a6a4b2 > BW_CLIENTID
             81404c9c-3d9c-4ddd-a32e-b40500a6c212 > BW_CLIENTSECRET
@@ -39,6 +38,8 @@ jobs:
           set -e
           BW_SESSION=$(bw unlock --passwordenv MASTER_PASSWORD --raw)
           echo "BW_SESSION=$BW_SESSION" >> $GITHUB_ENV
+          EMAIL=$(bw status --session "$BW_SESSION" | jq -r '.userEmail')
+          echo "EMAIL=$EMAIL" >> $GITHUB_ENV
         env:
           MASTER_PASSWORD: ${{ steps.bitwarden-secrets.outputs.MASTER_PASSWORD }}
         shell: bash
@@ -85,7 +86,7 @@ jobs:
         run: |
           set -e
           BW_SESSION="${{ env.BW_SESSION }}"
-          EMAIL="${{ steps.bitwarden-secrets.outputs.EMAIL }}"
+          EMAIL="${{ env.EMAIL }}"
           
           # Format the stats message
           STATS=$(printf "Bitwarden Vault Stats\n=====================\n\nAccount: %s\n\n🔑 Logins:       %s\n💳 Cards:        %s\n🆔 Identities:  %s\n📝 Secure Notes: %s\n🔐 SSH Keys:     %s" "$EMAIL" "${{ env.LOGIN_COUNT }}" "${{ env.CARD_COUNT }}" "${{ env.IDENTITY_COUNT }}" "${{ env.NOTE_COUNT }}" "${{ env.SSH_KEY_COUNT }}")
